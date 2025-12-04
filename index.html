@@ -1,0 +1,1108 @@
+<!doctype html> 
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Welcome to Firebase Hosting</title>
+
+  <!-- Keeping your CDN reference for Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Inline favicon to avoid 404 -->
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=">
+
+  <style>
+    :root{
+      --green:#14b08b;
+      --muted:#9aa6af;
+      --bg:#f6faf8;
+      --card:#ffffff;
+      --soft:#f3f7f6;
+      --accent:#0ea77f;
+      --danger:#ef4444;
+      --shadow: 0 6px 24px rgba(18,38,49,0.06);
+      --radius:14px;
+      --glass: rgba(14,160,128,0.06);
+      --container-max:1200px;
+    }
+
+    /* Base */
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      font-family:Inter, system-ui, Arial;
+      margin:0;
+      background:linear-gradient(180deg,#fbfffd 0%, #f1fbf6 100%);
+      color:#0f1724;
+      font-size:18px;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .app{display:flex; min-height:100vh; align-items:stretch}
+    .sidebar{
+      width:260px;
+      background:linear-gradient(180deg, #ffffff 0%, #f7fffb 100%);
+      padding:36px 24px;
+      border-right:1px solid #edf3f1;
+      flex-shrink:0;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .sidebar.hidden-mobile{
+      transform: translateX(-110%);
+      box-shadow: none;
+    }
+    .brand{font-weight:700; color:var(--accent); font-size:22px}
+    .brand small{display:block; font-weight:500; color:var(--muted); font-size:12px}
+    .nav{margin-top:36px}
+    .nav button{
+      display:flex; align-items:center; gap:12px;
+      width:100%; padding:14px 16px; border-radius:12px; border:none;
+      background:transparent; margin-bottom:8px; text-align:left;
+      cursor:pointer; font-weight:600; font-size:16px;
+    }
+    .nav button svg{width:20px; height:20px; flex-shrink:0}
+    .nav button.active{background:var(--accent); color:#fff}
+    .signout{position:fixed; left:18px; bottom:24px; width:224px}
+    .main{flex:1; padding:36px; max-width:var(--container-max); margin:0 auto; width:100%}
+    .header{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap}
+    h1{font-size:34px; margin:0 0 8px}
+    .subtitle{color:var(--muted); margin-bottom:18px}
+    .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:18px}
+    .card{background:var(--card); border-radius:14px; padding:18px; box-shadow:var(--shadow)}
+    .metric{font-size:20px; color:var(--muted)}
+    .metric .big{font-size:26px; font-weight:700; margin-top:12px}
+    .large-card{grid-column:1/3}
+    .chart-wrap{height:260px; width:100%}
+    .transactions{margin-top:22px}
+    .tx-list{display:flex; flex-direction:column; gap:12px}
+    .tx{display:flex; justify-content:space-between; align-items:center; padding:16px; border-radius:12px; background:linear-gradient(180deg,#fff,#fbfffb); border:1px solid #eef6f3}
+    .tx .left{display:flex; gap:12px; align-items:center}
+    .tx .icon{width:44px;height:44px;border-radius:10px;background:var(--glass); display:grid; place-items:center}
+    .tx .title{font-weight:700}
+    .tx .meta{color:var(--muted); font-size:13px}
+    .tx .amount{font-weight:700}
+    .amount.negative{color:#ef4444}
+    .amount.positive{color:var(--accent)}
+
+    /* modal */
+    .modal-back{position:fixed; inset:0; background:rgba(10,12,14,0.45); display:none; align-items:center; justify-content:center; z-index:40}
+    .modal{width:520px; max-width:calc(100% - 40px); background:var(--card); border-radius:14px; padding:20px}
+
+    .tabs{display:flex; gap:8px; margin-bottom:14px}
+    .tabs button{flex:1;padding:10px;border-radius:12px;border:none;background:#f3f7f6}
+
+    label{display:block; font-weight:600; margin-bottom:6px}
+    input, select, textarea{width:100%; padding:12px; border-radius:10px; border:1px solid #e6eef0; background:#fbfffe; font-size:1rem}
+    .row-2{display:flex; gap:12px}
+    .actions{display:flex; justify-content:flex-end; gap:12px; margin-top:12px}
+    .btn{padding:10px 16px; border-radius:10px; border:none; cursor:pointer; font-weight:600}
+    .btn.primary{background:var(--accent); color:#fff}
+    .btn.ghost{background:#fff; border:1px solid #e6eef0}
+
+    /* auth */
+    .centered{display:grid; place-items:center; min-height:100vh}
+    .auth-card{width:920px; display:grid; grid-template-columns:1fr 420px; gap:36px; align-items:center}
+    .hero{padding-left:36px}
+    .hero h2{font-size:36px; margin:0}
+    .hero p{color:var(--muted)}
+    .auth-form{background:var(--card); padding:28px; border-radius:14px; box-shadow:var(--shadow)}
+    .tab-pill{display:flex; gap:8px; margin-bottom:14px}
+    .tab-pill button{flex:1;padding:12px;border-radius:12px;border:none;background:#f3f7f6}
+    .tab-pill button.active{background:#fff; box-shadow:var(--shadow)}
+    .google-btn{display:flex; align-items:center; gap:10px; padding:10px; border-radius:10px; border:1px solid #e6eef0; background:#fff; cursor:pointer; margin-top:10px; width:100%; justify-content:center}
+
+    .settings .section{margin-bottom:18px}
+    .analytics-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+
+    /* small refinements: allow filter container to wrap */
+    .filters-wrap{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+    .filters-wrap input, .filters-wrap select, .filters-wrap .btn{min-width:160px}
+
+    /* hamburger */
+    .hamburger {
+      display:none;
+      background:transparent;
+      border:0;
+      width:44px;
+      height:44px;
+      border-radius:10px;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow:none;
+    }
+    .hamburger .bar{display:block; width:20px; height:2px; background:#0f1724; border-radius:2px; position:relative}
+    .hamburger .bar::before, .hamburger .bar::after{
+      content:""; position:absolute; left:0; width:20px; height:2px; background:#0f1724; border-radius:2px;
+    }
+    .hamburger .bar::before{ top:-6px }
+    .hamburger .bar::after{ top:6px }
+
+    /* small desktop polish for filter block (keeps same DOM) */
+    .card.filter-row{display:flex; gap:12px; align-items:center; padding:14px; flex-wrap:wrap}
+    .card.filter-row input{flex:1; min-width:200px}
+    .card.filter-row select{min-width:160px}
+    .card.filter-row .btn{min-width:120px}
+
+    /* responsive breakpoints */
+    @media (max-width:1200px){
+      .grid{grid-template-columns:repeat(2,1fr)}
+      .large-card{grid-column:1/3}
+      .auth-card{width:100%}
+      .main{padding:28px}
+    }
+
+    @media (max-width:860px){
+      /* hide sidebar by default on small screens; allow toggling */
+      .sidebar{position:fixed; left:0; top:0; bottom:0; z-index:60; transform:translateX(-110%); box-shadow:0 10px 30px rgba(0,0,0,0.08)}
+      .sidebar.visible{transform:translateX(0)}
+      .main{padding:18px; max-width:100%; margin:0 12px}
+      .grid{grid-template-columns:1fr}
+      .large-card{grid-column:1}
+      .auth-card{grid-template-columns:1fr; gap:18px; padding:12px}
+      .hero{padding-left:0}
+      /* show hamburger in header */
+      .hamburger{display:flex}
+      /* move signout into sidebar; hide fixed signout */
+      .signout{display:none}
+      /* transaction filters become full width stacked */
+      .card.filters { padding:16px; }
+      .filters-wrap input, .filters-wrap select{flex:1; min-width:0}
+      .filters-wrap .btn{min-width:120px}
+      /* tx items compress */
+      .tx{flex-direction:column; align-items:flex-start; gap:10px}
+      .tx > div:last-child{align-self:stretch; display:flex; justify-content:space-between; width:100%}
+      /* dim background when sidebar open */
+      body.sidebar-open::after{
+        content:"";
+        position:fixed;
+        inset:0;
+        background:rgba(10,10,10,0.35);
+        z-index:50;
+      }
+      /* make auth overlay more full-screen friendly */
+      #auth { padding: 18px; }
+      .auth-card { width: 100%; max-width: 720px; }
+    }
+
+    @media (max-width:600px){
+      body{font-size:16px}
+      .brand{font-size:20px}
+      .header{align-items:center}
+      h1{font-size:28px}
+      .hero h2{font-size:28px}
+      .modal{width:92%}
+      .auth-form .btn.primary, .auth-form .google-btn{width:100%; display:block}
+      .tab-pill button{padding:10px; font-size:0.95rem}
+      .tx .icon{width:40px;height:40px}
+      .tx{padding:12px}
+      .card{padding:14px}
+      .tx-list{gap:10px}
+      .btn{padding:10px 12px}
+    }
+
+    /* header sign in button */
+    #header-signin { margin-left: 12px; }
+
+    /* change password small refinements */
+    .pass-help { font-size:13px; color:var(--muted); margin-top:6px }
+    .error { color:var(--danger); font-weight:600; margin-top:8px; }
+    .success { color:var(--accent); font-weight:700; margin-top:8px; }
+  </style>
+</head>
+<body>
+
+<div id="app" class="app">
+  <aside id="sidebar" class="sidebar">
+    <div class="brand">Finance <small>Personal Tracker</small></div>
+    <nav class="nav" role="navigation">
+      <!-- Dashboard (grid icon) -->
+      <button id="nav-dashboard" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+        Dashboard
+      </button>
+
+      <!-- Transactions (paper plane icon) -->
+      <button id="nav-transactions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        Transactions
+      </button>
+
+      <!-- Categories (tag icon) -->
+      <button id="nav-categories">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41L11 3.83a2 2 0 0 0-2.83 0L3.41 8.59a2 2 0 0 0 0 2.83l9.59 9.59a2 2 0 0 0 2.83 0l4.76-4.76a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+        Categories
+      </button>
+
+      <!-- Analytics (bar chart icon) -->
+      <button id="nav-analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M9 17V9"/><path d="M15 17V5"/><path d="M21 17v-4"/></svg>
+        Analytics
+      </button>
+
+      <!-- Settings (gear icon) -->
+      <button id="nav-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83l-1.41 1.41a2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0L2.21 20.2a2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 2.6 15 1.65 1.65 0 0 0 2 13.5V12a2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L5.7 5.21a2 2 0 0 1 0-2.83L7.11.97a2 2 0 0 1 2.83 0l.06.06c.5.5 1.25.59 1.82.33A1.65 1.65 0 0 0 12 2.6 1.65 1.65 0 0 0 13.5 2h0A2 2 0 0 1 15.5 4v.09c.46.23.88.55 1.2.9.46.53.86 1.12 1.2 1.76.14.26.33.5.56.69.71.58 1.71.39 2.24-.31l.06-.06a2 2 0 0 1 2.83 0l1.41 1.41a2 2 0 0 1 0 2.83l-.06.06c-.7.53-.9 1.53-.32 2.24.19.23.43.42.69.56.64.34 1.23.74 1.76 1.2.35.32.67.74.9 1.2V13.5a2 2 0 0 1-2 2h-.09z"/></svg>
+        Settings
+      </button>
+    </nav>
+    <div style="margin-top:24px">
+      <button id="sign-out-btn" class="btn ghost" style="width:100%">⤴ Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main" id="main-area">
+
+    <!-- Header row includes hamburger for mobile -->
+    <div class="header" style="margin-bottom:18px">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button id="hamburger" class="hamburger" aria-label="Toggle menu" title="Open menu">
+          <span class="bar"></span>
+        </button>
+        <div>
+          <h1>Dashboard</h1>
+          <div class="subtitle">Here's your financial overview for this month</div>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div id="header-name" style="font-weight:700; cursor:pointer">Guest</div>
+        <button id="header-signin" class="btn ghost" style="display:none">Sign In</button>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <section id="page-dashboard">
+      <div class="grid">
+        <div class="card metric">
+          <div>Total Balance</div>
+          <div class="big" id="balance">$0</div>
+        </div>
+        <div class="card metric">
+          <div>This Month Income</div>
+          <div class="big" id="month-income">$0</div>
+        </div>
+        <div class="card metric">
+          <div>This Month Expense</div>
+          <div class="big" id="month-expense">$0</div>
+        </div>
+
+        <div class="card large-card">
+          <div style="font-weight:700; margin-bottom:8px">Balance Trend</div>
+          <div class="chart-wrap"><canvas id="balanceChart"></canvas></div>
+        </div>
+
+      </div>
+
+      <!-- Recent transactions below balance trend with Add button on right -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px; gap:12px; flex-wrap:wrap">
+        <div style="font-weight:700; font-size:20px">Recent Transactions</div>
+        <div><button id="add-tx-top" class="btn primary">+ Add Transaction</button></div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div id="recent-list" class="tx-list"></div>
+      </div>
+
+    </section>
+
+    <!-- Transactions page -->
+    <section id="page-transactions" style="display:none">
+      <h1>Transactions</h1>
+      <div class="subtitle">View and manage all your financial transactions</div>
+
+      <div class="card filter-row" style="margin:18px 0">
+        <div class="filters-wrap" style="flex:1; min-width:0;">
+          <input id="search" placeholder="Search transactions..." style="flex:1; padding:12px; border-radius:10px; border:1px solid #e6eef0">
+          <select id="filter-type" style="width:180px; padding:12px; border-radius:10px; border:1px solid #e6eef0">
+            <option value="all">All Types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+          <select id="filter-category" style="width:180px; padding:12px; border-radius:10px; border:1px solid #e6eef0">
+            <option value="all">All Categories</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:center; margin-left:auto; flex-wrap:wrap">
+          <button id="clear-filters" class="btn ghost">Clear Filters</button>
+          <button id="add-tx" class="btn primary">+ Add Transaction</button>
+        </div>
+      </div>
+
+      <div id="tx-list" class="tx-list"></div>
+
+    </section>
+
+    <!-- Categories page -->
+    <section id="page-categories" style="display:none">
+      <h1>Categories</h1>
+      <div class="subtitle">Manage your transaction categories</div>
+      <div style="display:flex; gap:18px; margin-top:18px; flex-wrap:wrap">
+        <div class="card" style="flex:1; min-width:260px">
+          <div style="font-weight:700; color:var(--green)">Income Categories</div>
+          <div id="income-cats" style="margin-top:12px"></div>
+        </div>
+        <div class="card" style="flex:1; min-width:260px">
+          <div style="font-weight:700; color:var(--danger)">Expense Categories</div>
+          <div id="expense-cats" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics -->
+    <section id="page-analytics" style="display:none">
+      <h1>Analytics</h1>
+      <div class="subtitle">Visualize your spending patterns and financial insights</div>
+
+      <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="card metric"><div>Top Category</div><div class="big" id="top-cat">-</div></div>
+        <div class="card metric"><div>Total Income (This Month)</div><div class="big" id="total-inc-yt">-</div></div>
+        <div class="card metric"><div>Total Expense (This Month)</div><div class="big" id="total-exp-yt">-</div></div>
+      </div>
+
+      <div class="analytics-grid" style="margin-top:18px">
+        <div class="card"><div style="font-weight:700;margin-bottom:8px">Income vs Expense</div><canvas id="incExpChart"></canvas></div>
+        <div class="card"><div style="font-weight:700;margin-bottom:8px">Spending by Category</div><canvas id="pieChart"></canvas></div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div>
+            <div style="font-weight:700">Summary</div>
+            <div style="color:var(--muted)">Savings Rate</div>
+          </div>
+          <div id="savings-rate" style="font-weight:700; color:var(--accent); font-size:22px">0%</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Settings -->
+    <section id="page-settings" style="display:none" class="settings">
+      <h1>Settings</h1>
+      <div class="subtitle">Manage your account preferences and settings</div>
+
+      <div class="card section">
+        <div style="font-weight:700;">Profile Settings</div>
+        <div style="margin-top:12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+          <div style="flex:1; min-width:200px">
+            <label>Full Name</label>
+            <input id="profile-name" value="">
+          </div>
+          <div style="flex:1; min-width:200px">
+            <label>Email Address</label>
+            <input id="profile-email" value="">
+          </div>
+        </div>
+        <div style="margin-top:10px"><button id="change-pass" class="btn ghost">🔒 Change Password</button></div>
+      </div>
+
+      <div class="card section">
+        <div style="font-weight:700">Preferences</div>
+        <div style="margin-top:10px">
+          <label>Currency</label>
+          <select><option>US Dollar (USD)</option></select>
+          <div style="margin-top:12px"><label><input type="checkbox" checked> Email Notifications</label></div>
+        </div>
+      </div>
+
+      <div class="card section">
+        <div style="font-weight:700">Data Management</div>
+        <div style="margin-top:12px"><button class="btn primary">⬇ Export Transactions as CSV</button></div>
+      </div>
+
+      <div class="card section" style="border:1px solid #fdecea; background:#fff6f6">
+        <div style="font-weight:700; color:var(--danger)">Danger Zone</div>
+        <div style="margin-top:12px"><button class="btn" style="background:var(--danger); color:#fff">Delete Account</button></div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- Transaction modal -->
+<div id="modal" class="modal-back">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <div id="modal-title" style="font-weight:700">Add Transaction</div>
+      <button id="close-modal" class="btn">✕</button>
+    </div>
+
+    <div class="tabs" style="margin-top:12px">
+      <button id="tab-expense">Expense</button>
+      <button id="tab-income">Income</button>
+    </div>
+
+    <form id="tx-form">
+      <label>Amount *</label>
+      <input id="tx-amount" type="number" step="0.01" value="0.00" required>
+      <label style="margin-top:10px">Category *</label>
+      <select id="tx-category"></select>
+      <label style="margin-top:10px">Date *</label>
+      <input id="tx-date" type="date" value="2025-12-01">
+      <label style="margin-top:10px">Description</label>
+      <input id="tx-desc" placeholder="e.g., Grocery shopping">
+      <div class="actions">
+        <button type="button" id="cancel-tx" class="btn ghost">Cancel</button>
+        <button class="btn primary" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD modal (new) -->
+<div id="pass-modal" class="modal-back" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pass-modal-title">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <div id="pass-modal-title" style="font-weight:700">Change Password</div>
+      <button id="close-pass-modal" class="btn">✕</button>
+    </div>
+
+    <form id="pass-form" style="margin-top:12px">
+      <label>Current Password</label>
+      <input id="current-pass" type="password" autocomplete="current-password" placeholder="Enter current password">
+      <label style="margin-top:10px">New Password</label>
+      <input id="new-pass" type="password" autocomplete="new-password" placeholder="Enter new password">
+      <label style="margin-top:10px">Confirm New Password</label>
+      <input id="confirm-pass" type="password" autocomplete="new-password" placeholder="Repeat new password">
+      <div class="pass-help">Password must be at least 6 characters.</div>
+      <div id="pass-feedback" style="min-height:22px"></div>
+      <div class="actions" style="margin-top:14px">
+        <button type="button" id="cancel-pass" class="btn ghost">Cancel</button>
+        <button class="btn primary" type="submit">Update Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Auth area (responsive sign in / sign up) -->
+<div id="auth" class="centered" style="display:none">
+  <div class="auth-card">
+    <div class="hero">
+      <div style="width:80px;height:80px;border-radius:18px;background:var(--glass); display:grid; place-items:center; margin-bottom:18px">📈</div>
+      <h2>Manage Your Money</h2>
+      <p>Track expenses, visualize spending patterns, and take control of your finances with our intuitive personal finance tracker.</p>
+      <ul style="margin-top:12px; color:var(--muted)">
+        <li>Real-time expense tracking</li>
+        <li>Smart analytics & insights</li>
+        <li>Export & backup your data</li>
+      </ul>
+    </div>
+
+    <div class="auth-form">
+      <div class="tab-pill">
+        <button id="auth-signin" class="active">Sign In</button>
+        <button id="auth-signup">Create Account</button>
+      </div>
+
+      <!-- Sign in form -->
+      <form id="signin-form">
+        <label>Email</label>
+        <input id="signin-email" placeholder="you@example.com">
+        <label style="margin-top:10px">Password</label>
+        <input id="signin-pass" type="password" placeholder="••••••••">
+        <div style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+          <button class="btn primary" id="signin-btn">Sign In</button>
+          <div class="google-btn" id="google-signin">
+            <svg width="18" height="18" viewBox="0 0 533.5 544.3"><path fill="#4285F4" d="M533.5 278.4c0-18.5-1.6-36.3-4.8-53.5H272v101.3h147c-6.4 34.4-25.6 63.5-54.6 83.1v68.8h88.2c51.6-47.6 81.9-118 81.9-199.7z"/><path fill="#34A853" d="M272 544.3c73.7 0 135.6-24.3 180.8-66l-88.2-68.8c-24 16.1-54.5 25.6-92.6 25.6-71 0-131.1-47.9-152.6-112.3H29.6v70.7C75 490 167.5 544.3 272 544.3z"/><path fill="#FBBC05" d="M119.4 325.8c-9.2-27.4-9.2-56.7 0-84.1V171H29.6c-40.6 81.6-40.6 161.4 0 243l89.8-88.2z"/><path fill="#EA4335" d="M272 107.5c39.9 0 75.8 13.7 104.1 40.6l78.1-78.1C407.6 22.5 344.8 0 272 0 167.5 0 75 54.3 29.6 171l89.8 70.7C140.9 155.4 201 107.5 272 107.5z"/></svg>
+            Continue with Google
+          </div>
+        </div>
+      </form>
+
+      <!-- Sign up form -->
+      <form id="signup-form" style="display:none">
+        <label>Full Name</label>
+        <input id="signup-name" placeholder="John Doe">
+        <label style="margin-top:10px">Email</label>
+        <input id="signup-email" placeholder="you@example.com">
+        <label style="margin-top:10px">Password</label>
+        <input id="signup-pass" type="password" placeholder="••••••••">
+        <div style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+          <button class="btn primary" id="signup-btn">Create Account</button>
+          <div class="google-btn" id="google-signup">
+            <svg width="18" height="18" viewBox="0 0 533.5 544.3"><path fill="#4285F4" d="M533.5 278.4c0-18.5-1.6-36.3-4.8-53.5H272v101.3h147c-6.4 34.4-25.6 63.5-54.6 83.1v68.8h88.2c51.6-47.6 81.9-118 81.9-199.7z"/><path fill="#34A853" d="M272 544.3c73.7 0 135.6-24.3 180.8-66l-88.2-68.8c-24 16.1-54.5 25.6-92.6 25.6-71 0-131.1-47.9-152.6-112.3H29.6v70.7C75 490 167.5 544.3 272 544.3z"/><path fill="#FBBC05" d="M119.4 325.8c-9.2-27.4-9.2-56.7 0-84.1V171H29.6c-40.6 81.6-40.6 161.4 0 243l89.8-88.2z"/><path fill="#EA4335" d="M272 107.5c39.9 0 75.8 13.7 104.1 40.6l78.1-78.1C407.6 22.5 344.8 0 272 0 167.5 0 75 54.3 29.6 171l89.8 70.7C140.9 155.4 201 107.5 272 107.5z"/></svg>
+            Continue with Google
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- demo data & state ---------- */
+const SAMPLE = { income:250, expenses:[
+  {category:'rent',amount:60},
+  {category:'electricity',amount:7},
+  {category:'water',amount:4},
+  {category:'groceries',amount:50},
+  {category:'internet',amount:25},
+  {category:'maintenance',amount:45},
+  {category:'gas',amount:15}
+]};
+
+let transactions = [];
+let categories = { income:['salary','freelance'], expense:['rent','groceries','internet','maintenance','gas','electricity','water'] };
+let currentUser = JSON.parse(localStorage.getItem('pft_user')) || null;
+
+/* --- Ensure there's a demo stored password for change-password flow --- */
+/* If there is no password stored, seed a demo password.
+   This is purely demo behavior — replace with server-side logic in production. */
+if (!localStorage.getItem('pft_pass')) {
+  localStorage.setItem('pft_pass', 'demo123'); // default demo password
+}
+
+/* If user signs in/up we'll ensure there's a password key as well (handled below in auth handlers) */
+
+function seed(){
+  transactions = [];
+  transactions.push({id:'inc1', title:'Monthly Salary', type:'income', amount:SAMPLE.income, category:'salary', date:'2025-12-01'});
+  SAMPLE.expenses.forEach((e,i)=> transactions.push({id:'e'+i, title:e.category.charAt(0).toUpperCase()+e.category.slice(1), type:'expense', amount:e.amount, category:e.category, date:'2025-12-01'}));
+}
+// seed();
+
+/* ---------- navigation ---------- */
+const pages = ['dashboard','transactions','categories','analytics','settings'];
+function showPage(page){
+  pages.forEach(p=>document.getElementById('page-'+p).style.display = (p===page? 'block':'none'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  const nav = document.getElementById('nav-'+page);
+  if(nav) nav.classList.add('active');
+  render();
+}
+pages.forEach(p=> document.getElementById('nav-'+p).addEventListener('click', ()=> showPage(p)));
+
+/* ---------- rendering ---------- */
+function calcTotals(){
+  const income = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount),0);
+  const expense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount),0);
+  const net = income - expense;
+  const pct = income? (net/income)*100:0;
+  return {income,expense,net,pct};
+}
+
+function render(){
+  const totals = calcTotals();
+  document.getElementById('month-income').textContent = '$' + totals.income.toFixed(2);
+  document.getElementById('month-expense').textContent = '$' + totals.expense.toFixed(2);
+  document.getElementById('balance').textContent = '$' + totals.net.toFixed(2);
+
+  document.getElementById('header-name').textContent = currentUser ? currentUser.name : 'Guest';
+  document.getElementById('header-signin').style.display = currentUser ? 'none' : 'inline-block';
+
+  const recent = document.getElementById('recent-list'); recent.innerHTML='';
+  transactions.slice(0,6).forEach(t=> recent.appendChild(txElement(t)));
+
+  const txList = document.getElementById('tx-list'); txList.innerHTML='';
+  getFilteredTransactions().forEach(t=> txList.appendChild(txElement(t,true)));
+
+  document.getElementById('income-cats').innerHTML = categories.income.map(c=> {
+    return '<div style="padding:12px;border-radius:10px;background:#fbfffe;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div>' +
+      c +
+      '</div><div><button class="btn ghost" onclick="editCategory(\'' + c + '\',\'income\')">✏️</button> <button class="btn ghost" onclick="deleteCategory(\'' + c + '\',\'income\')">🗑️</button></div></div>';
+  }).join('');
+  document.getElementById('expense-cats').innerHTML = categories.expense.map(c=> {
+    return '<div style="padding:12px;border-radius:10px;background:#fbfffe;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div>' +
+      c +
+      '</div><div><button class="btn ghost" onclick="editCategory(\'' + c + '\',\'expense\')">✏️</button> <button class="btn ghost" onclick="deleteCategory(\'' + c + '\',\'expense\')">🗑️</button></div></div>';
+  }).join('');
+
+  if(currentUser){
+    document.getElementById('profile-name').value = currentUser.name;
+    document.getElementById('profile-email').value = currentUser.email;
+  } else {
+    document.getElementById('profile-name').value = '';
+    document.getElementById('profile-email').value = '';
+  }
+
+  const catSel = document.getElementById('filter-category');
+  catSel.innerHTML = '<option value="all">All Categories</option>' + [...categories.income,...categories.expense].map(c => '<option value="' + c + '">' + c + '</option>').join('');
+  const modalCat = document.getElementById('tx-category');
+  modalCat.innerHTML = [...categories.income,...categories.expense].map(c => '<option value="' + c + '">' + c + '</option>').join('');
+
+  document.getElementById('total-inc-yt').textContent = '$' + totals.income.toFixed(2);
+  document.getElementById('total-exp-yt').textContent = '$' + totals.expense.toFixed(2);
+  document.getElementById('savings-rate').textContent = totals.pct.toFixed(0) + '%';
+  const catSums = transactions.filter(t=>t.type==='expense').reduce((a,t)=>{a[t.category]=(a[t.category]||0)+Number(t.amount);return a;}, {});
+  const top = Object.keys(catSums).sort((a,b)=>catSums[b]-catSums[a])[0]||'-';
+  document.getElementById('top-cat').textContent = top.charAt(0).toUpperCase()+top.slice(1);
+
+  drawCharts();
+}
+
+function txElement(t, withActions=false){
+  const div = document.createElement('div');
+  div.className='tx';
+  const actionsHtml = withActions ? '<div style="display:flex; flex-direction:column; gap:6px; margin-left:12px"><button class="btn ghost" onclick="openEdit(\''+t.id+'\')">✏️</button><button class="btn ghost" onclick="deleteTx(\''+t.id+'\')">🗑️</button></div>' : '';
+  div.innerHTML = '<div class="left"><div class="icon">' + (t.type==='income' ? '💵' : '🧾') + '</div><div><div class="title">' + t.title + '</div><div class="meta">' + t.category + '</div></div></div>' +
+    '<div style="text-align:right; display:flex; gap:10px; align-items:center"><div style="text-align:right"><div class="amount ' + (t.type==='expense' ? 'negative' : 'positive') + '">' + (t.type==='expense' ? '-':'+' ) + '$' + Number(t.amount).toFixed(2) + '</div><div class="meta">' + t.date + '</div></div>' +
+    actionsHtml + '</div>';
+  return div;
+}
+
+/* filters */
+function getFilteredTransactions(){
+  const q = (document.getElementById('search')?.value || '').toLowerCase();
+  const type = (document.getElementById('filter-type')?.value || 'all');
+  const cat = (document.getElementById('filter-category')?.value || 'all');
+  return transactions.filter(t=>{
+    if(type!=='all' && t.type!==type) return false;
+    if(cat!=='all' && t.category!==cat) return false;
+    if(q && !(t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q) || String(t.amount).includes(q))) return false;
+    return true;
+  });
+}
+document.getElementById('search')?.addEventListener('input', ()=>render());
+document.getElementById('filter-type')?.addEventListener('change', ()=>render());
+document.getElementById('filter-category')?.addEventListener('change', ()=>render());
+document.getElementById('clear-filters')?.addEventListener('click', ()=>{ document.getElementById('search').value=''; document.getElementById('filter-type').value='all'; document.getElementById('filter-category').value='all'; render(); });
+
+/* charts */
+let balanceChart, incExpChart, pieChart;
+function drawCharts(){
+  const bc = document.getElementById('balanceChart');
+  if(bc){
+    const ctxB = bc.getContext('2d');
+    const balanceData = [2200,2400,2600,2950,2250,2600];
+    if(balanceChart) balanceChart.destroy();
+    balanceChart = new Chart(ctxB, {type:'line', data:{labels:['Jan 1','Jan 5','Jan 10','Jan 15','Jan 20','Jan 25'], datasets:[{label:'Balance', data:balanceData, fill:false, tension:0.3}]}, options:{plugins:{legend:{display:false}}}});
+  }
+  const ie = document.getElementById('incExpChart');
+  if(ie){
+    const incTotal = calcTotals().income;
+    const expTotal = calcTotals().expense;
+    const ctxIE = ie.getContext('2d');
+    if(incExpChart) incExpChart.destroy();
+    incExpChart = new Chart(ctxIE, {type:'bar', data:{labels:['This month'], datasets:[{label:'income', data:[incTotal]},{label:'expense', data:[expTotal]}]}, options:{scales:{x:{stacked:false}}}});
+  }
+  const pc = document.getElementById('pieChart');
+  if(pc){
+    const expenseItems = transactions.filter(t=>t.type==='expense');
+    const labels = expenseItems.map(t=>t.category);
+    const data = expenseItems.map(t=>t.amount);
+    const ctxP = pc.getContext('2d');
+    if(pieChart) pieChart.destroy();
+    pieChart = new Chart(ctxP, {type:'doughnut', data:{labels, datasets:[{data}]}, options:{plugins:{legend:{position:'right'}}}});
+  }
+}
+
+/* modal */
+const modal = document.getElementById('modal'); let editingId = null;
+function openModal(type='expense', prefill=null){
+  modal.style.display='flex';
+  document.getElementById('tab-expense').style.background = type==='expense'?'#e9f7f3':'';
+  document.getElementById('tab-income').style.background = type==='income'?'#e9f7f3':'';
+  document.getElementById('tx-amount').value = prefill? prefill.amount : (type==='income'? SAMPLE.income : 0.00);
+  document.getElementById('tx-category').value = prefill? prefill.category : categories.expense[0];
+  document.getElementById('tx-date').value = prefill? prefill.date : '2025-12-01';
+  document.getElementById('tx-desc').value = prefill? prefill.title : '';
+  document.getElementById('modal-title').textContent = prefill? 'Edit Transaction':'Add Transaction';
+  editingId = prefill? prefill.id : null;
+}
+function closeModal(){ modal.style.display='none'; editingId = null; }
+document.getElementById('add-tx')?.addEventListener('click', ()=>openModal('expense'));
+document.getElementById('add-tx-top')?.addEventListener('click', ()=>openModal('expense'));
+document.getElementById('close-modal')?.addEventListener('click', closeModal);
+document.getElementById('cancel-tx')?.addEventListener('click', (e)=>{ e.preventDefault(); closeModal(); });
+
+document.getElementById('tab-expense')?.addEventListener('click', ()=>{ document.getElementById('tab-expense').style.background='#e9f7f3'; document.getElementById('tab-income').style.background=''; })
+document.getElementById('tab-income')?.addEventListener('click', ()=>{ document.getElementById('tab-income').style.background='#e9f7f3'; document.getElementById('tab-expense').style.background=''; })
+
+document.getElementById('tx-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!currentUser) {
+        alert("Please login first");
+        return;
+    }
+
+    const amt = parseFloat(document.getElementById('tx-amount').value);
+    const cat = document.getElementById('tx-category').value;
+    const date = document.getElementById('tx-date').value;
+    const desc = document.getElementById('tx-desc').value;
+
+    const type = document.getElementById('tab-income').style.background === 'rgb(233, 247, 243)'
+        ? 'income'
+        : 'expense';
+
+    await addDoc(txRef, {
+        title: desc,
+        type,
+        amount: amt,
+        category: cat,
+        date,
+        user: currentUser.uid
+    });
+
+    closeModal();
+    loadTransactions();  // <--- refresh UI
+});
+
+/* edit/delete */
+function openEdit(id){ const tx = transactions.find(t=>t.id===id); if(tx) openModal(tx.type, tx); }
+function deleteTx(id){ if(confirm('Delete this transaction?')){ transactions = transactions.filter(t=>t.id!==id); render(); }}
+
+/* categories */
+function editCategory(name, kind){ const newName = prompt('Rename category', name); if(newName){ categories[kind] = categories[kind].map(c=>c===name?newName:c); transactions = transactions.map(t=> t.category===name? {...t, category:newName, title:newName.charAt(0).toUpperCase()+newName.slice(1)}:t ); render(); }}
+function deleteCategory(name, kind){ if(confirm('Delete category? Transactions using it will remain unchanged.')){ categories[kind] = categories[kind].filter(c=>c!==name); render(); }}
+
+/* ---------- CHANGE PASSWORD logic (new) ---------- */
+const passModal = document.getElementById('pass-modal');
+const passForm = document.getElementById('pass-form');
+const changePassBtn = document.getElementById('change-pass');
+const closePassBtn = document.getElementById('close-pass-modal');
+const cancelPassBtn = document.getElementById('cancel-pass');
+const passFeedback = document.getElementById('pass-feedback');
+
+function openPassModal(){
+  // clear previous values and feedback
+  document.getElementById('current-pass').value = '';
+  document.getElementById('new-pass').value = '';
+  document.getElementById('confirm-pass').value = '';
+  passFeedback.innerHTML = '';
+  passModal.style.display = 'flex';
+  passModal.setAttribute('aria-hidden', 'false');
+  setTimeout(()=> document.getElementById('current-pass').focus(), 50);
+}
+
+function closePassModal(){
+  passModal.style.display = 'none';
+  passModal.setAttribute('aria-hidden', 'true');
+  passFeedback.innerHTML = '';
+}
+
+// Click handlers
+changePassBtn?.addEventListener('click', (e)=> { e.preventDefault(); openPassModal(); });
+closePassBtn?.addEventListener('click', closePassModal);
+cancelPassBtn?.addEventListener('click', (e)=>{ e.preventDefault(); closePassModal(); });
+
+// Form submit handler
+passForm?.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  passFeedback.innerHTML = '';
+  const cur = document.getElementById('current-pass').value || '';
+  const np = document.getElementById('new-pass').value || '';
+  const cp = document.getElementById('confirm-pass').value || '';
+
+  const stored = localStorage.getItem('pft_pass') || '';
+
+  // Basic validations
+  if (cur.length === 0) {
+    passFeedback.innerHTML = '<div class="error">Enter your current password.</div>';
+    return;
+  }
+  if (cur !== stored) {
+    passFeedback.innerHTML = '<div class="error">Current password is incorrect.</div>';
+    return;
+  }
+  if (np.length < 6) {
+    passFeedback.innerHTML = '<div class="error">New password must be at least 6 characters.</div>';
+    return;
+  }
+  if (np !== cp) {
+    passFeedback.innerHTML = '<div class="error">New password and confirmation do not match.</div>';
+    return;
+  }
+
+  // Update (demo): store new password in localStorage
+  localStorage.setItem('pft_pass', np);
+  passFeedback.innerHTML = '<div class="success">Password changed successfully.</div>';
+  // close after brief delay so user sees message
+  setTimeout(()=> closePassModal(), 900);
+});
+
+/* ---------- auth UI (responsive) ---------- */
+function showAuth(){ document.getElementById('auth').style.display='grid'; document.getElementById('app').style.display='none'; window.scrollTo(0,0); }
+function hideAuth(){ document.getElementById('auth').style.display='none'; document.getElementById('app').style.display='flex'; }
+
+function switchToSignIn(){ document.getElementById('signin-form').style.display='block'; document.getElementById('signup-form').style.display='none'; document.getElementById('auth-signin').classList.add('active'); document.getElementById('auth-signup').classList.remove('active'); setTimeout(()=>document.getElementById('signin-email').focus(),50); }
+function switchToSignUp(){ document.getElementById('signin-form').style.display='none'; document.getElementById('signup-form').style.display='block'; document.getElementById('auth-signup').classList.add('active'); document.getElementById('auth-signin').classList.remove('active'); setTimeout(()=>document.getElementById('signup-name').focus(),50); }
+
+document.getElementById('auth-signin').addEventListener('click', (e)=>{ e.preventDefault(); switchToSignIn(); });
+document.getElementById('auth-signup').addEventListener('click', (e)=>{ e.preventDefault(); switchToSignUp(); });
+
+function nameFromEmail(email){
+  const local = (email||'').split('@')[0] || 'User';
+  return local.split(/[._\-]/).map(s=> s? s.charAt(0).toUpperCase()+s.slice(1):'' ).join(' ');
+}
+
+document.getElementById('signin-btn').addEventListener('click', (e)=>{ e.preventDefault();
+  const email = document.getElementById('signin-email').value.trim();
+  if(!email){ alert('Enter an email to sign in (demo).'); return; }
+  const nameGuess = nameFromEmail(email);
+  currentUser = {name:nameGuess, email};
+  localStorage.setItem('pft_user', JSON.stringify(currentUser));
+  // If no demo password exists, set a default (keeps change-password flow functional)
+  if (!localStorage.getItem('pft_pass')) localStorage.setItem('pft_pass','demo123');
+  hideAuth(); render();
+});
+
+document.getElementById('signup-btn').addEventListener('click', (e)=>{ e.preventDefault();
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-pass').value || '';
+  if(!email){ alert('Enter an email to create account (demo).'); return; }
+  const finalName = name || nameFromEmail(email);
+  currentUser = {name:finalName, email};
+  localStorage.setItem('pft_user', JSON.stringify(currentUser));
+  // store provided password if given, else ensure a demo password exists
+  if (pass && pass.length >= 6) localStorage.setItem('pft_pass', pass);
+  else if (!localStorage.getItem('pft_pass')) localStorage.setItem('pft_pass','demo123');
+  hideAuth(); render();
+});
+
+/* ---------- "Continue with Google" (demo-mode) ---------- */
+function promptGoogleSignIn(flow){
+  const email = prompt("Demo Google sign-in\n\nEnter your Google email to continue:");
+  if(!email) return;
+  const name = nameFromEmail(email);
+  currentUser = {name, email};
+  localStorage.setItem('pft_user', JSON.stringify(currentUser));
+  if (!localStorage.getItem('pft_pass')) localStorage.setItem('pft_pass','demo123');
+  hideAuth(); render();
+}
+document.getElementById('google-signin').addEventListener('click', ()=> promptGoogleSignIn('signin'));
+document.getElementById('google-signup').addEventListener('click', ()=> promptGoogleSignIn('signup'));
+
+/* sign out */
+document.getElementById('sign-out-btn').addEventListener('click', ()=>{ if(confirm('Sign out?')){ currentUser = null; localStorage.removeItem('pft_user'); showAuth(); }});
+
+/* expose helpers to globals for inline actions */
+window.openEdit = openEdit; window.deleteTx = deleteTx; window.editCategory = editCategory; window.deleteCategory = deleteCategory;
+
+/* ---------- hamburger toggle (small JS) ---------- */
+const hamburger = document.getElementById('hamburger');
+const sidebar = document.getElementById('sidebar');
+
+function openSidebar(){
+  sidebar.classList.add('visible');
+  document.body.classList.add('sidebar-open');
+}
+function closeSidebar(){
+  sidebar.classList.remove('visible');
+  document.body.classList.remove('sidebar-open');
+}
+function toggleSidebar(){
+  if(sidebar.classList.contains('visible')) closeSidebar(); else openSidebar();
+}
+
+hamburger.addEventListener('click', (e)=>{
+  e.stopPropagation();
+  toggleSidebar();
+});
+
+/* close sidebar if clicking outside on small screens */
+document.addEventListener('click', (e)=>{
+  if(window.matchMedia('(max-width:860px)').matches){
+    if(!sidebar.contains(e.target) && !hamburger.contains(e.target)){
+      closeSidebar();
+    }
+  }
+});
+
+/* header triggers to open auth when guest */
+document.getElementById('header-name').addEventListener('click', ()=>{
+  if(!currentUser) showAuth();
+});
+document.getElementById('header-signin').addEventListener('click', ()=> showAuth());
+
+/* close sidebar on resize to desktop */
+window.addEventListener('resize', ()=>{
+  if(!window.matchMedia('(max-width:860px)').matches){
+    sidebar.classList.remove('visible');
+    document.body.classList.remove('sidebar-open');
+  }
+});
+
+/* init */
+if(!currentUser) showAuth(); else hideAuth();
+seed(); showPage('dashboard');
+</script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import {
+        getAuth,
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        signOut,
+        onAuthStateChanged,
+        updatePassword,
+        GoogleAuthProvider,
+        signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import {
+        getFirestore,
+        collection,
+        addDoc, // <-- Now addDoc is imported correctly
+        getDocs,
+        deleteDoc,
+        doc,
+        updateDoc
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    // 1. Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBAyH_S09nGhRpud3NJVzv8cR_eTScddrM",
+        authDomain: "my-financex.firebaseapp.com",
+        projectId: "my-financex",
+        storageBucket: "my-financex.firebasestorage.app",
+        messagingSenderId: "830015911644",
+        appId: "1:830015911644:web:fa8d50a6bb5441892f2619"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const txRef = collection(db, "transactions");
+    const googleProvider = new GoogleAuthProvider();
+
+    // The 'currentUser' in the non-module script is a placeholder for the demo, 
+    // but the Firebase user object is the source of truth.
+
+    // 2. Define the loadTransactions and saveTransaction functions in this module
+    window.loadTransactions = async function() {
+        const q = await getDocs(txRef);
+        
+        // Use the global 'transactions' array defined in the non-module script
+        transactions = []; 
+
+        q.forEach(docItem => {
+            const d = docItem.data();
+            const firebaseUser = auth.currentUser; // Get the user from the auth object
+            
+            // Only push transactions belonging to the current user
+            if (firebaseUser && d.user === firebaseUser.uid) {
+                transactions.push({ ...d, id: docItem.id });
+            }
+        });
+
+        // Call the render function from the non-module scope
+        render(); 
+    }
+
+    // This function is called by the modified submit handler above
+    window.saveTransaction = async function() {
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser) return;
+
+        const amt = parseFloat(document.getElementById('tx-amount').value);
+        const cat = document.getElementById('tx-category').value;
+        const date = document.getElementById('tx-date').value;
+        const desc = document.getElementById('tx-desc').value;
+        const type = document.getElementById('tab-income').style.background === 'rgb(233, 247, 243)' 
+                      ? 'income' : 'expense';
+
+        await addDoc(txRef, {
+            title: desc,
+            type,
+            amount: amt,
+            category: cat,
+            date,
+            user: firebaseUser.uid 
+        });
+
+        // Refresh UI with data from Firestore
+        window.loadTransactions();
+    }
+
+    // 3. AUTH STATE LISTENER
+    onAuthStateChanged(auth, (user) => {
+        // Update the 'currentUser' object in the non-module (global) scope 
+        // to keep the UI state (e.g., name in header) correct.
+        if (user) {
+            // Update the global 'currentUser' variable
+            window.currentUser = {
+                name: user.displayName || user.email.split("@")[0],
+                email: user.email,
+                uid: user.uid
+            };
+            
+            hideAuth();
+            window.loadTransactions(); // Load user-specific data
+        } else {
+            // Update the global 'currentUser' variable
+            window.currentUser = null;
+            transactions = []; // Clear demo/old transactions on sign-out
+            showAuth();
+        }
+
+        render();
+    });
+
+    // 4. AUTH HANDLERS (Unchanged from your original module code)
+
+    /*** EMAIL LOGIN ***/
+    document.getElementById("signin-btn").addEventListener("click", (e) => {
+        e.preventDefault();
+        const email = document.getElementById("signin-email").value.trim();
+        const pass = document.getElementById("signin-pass").value.trim();
+        signInWithEmailAndPassword(auth, email, pass)
+            .catch(err => alert(err.message));
+    });
+
+   /*** EMAIL SIGNUP (Create account) ***/
+document.getElementById("signup-btn").addEventListener("click", async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById("signup-email").value.trim();
+  const pass = document.getElementById("signup-pass").value.trim();
+
+  try {
+      const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+
+      await signOut(auth);  // force login
+
+      alert("Account created successfully! You can now log in.");
+
+      // Switch user to login screen
+      switchToSignIn();  // <--- MUST EXIST in your code
+
+      // Optional auto-fill
+      document.getElementById("signin-email").value = email;
+
+  } catch (err) {
+      alert(err.message);
+  }
+});
+
+    /*** GOOGLE LOGIN ***/
+    document.getElementById("google-signin").addEventListener("click", () => {
+        signInWithPopup(auth, googleProvider).catch(err => alert(err.message));
+    });
+    document.getElementById("google-signup").addEventListener("click", () => {
+        signInWithPopup(auth, googleProvider).catch(err => alert(err.message));
+    });
+
+    /*** SIGNOUT ***/
+    document.getElementById("sign-out-btn").addEventListener("click", () => {
+        if (confirm("Sign out?")) signOut(auth);
+    });
+
+    /*** UPDATE PASSWORD ***/
+    document.getElementById("pass-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const newPass = document.getElementById("new-pass").value.trim();
+        const confirmPass = document.getElementById("confirm-pass").value.trim();
+        const feedback = document.getElementById("pass-feedback");
+
+        if (!auth.currentUser) return;
+        if (newPass.length < 6) return feedback.innerHTML = `<div class="error">Password must be 6+ characters.</div>`;
+        if (newPass !== confirmPass) return feedback.innerHTML = `<div class="error">Passwords do not match.</div>`;
+
+        updatePassword(auth.currentUser, newPass)
+            .then(() => {
+                feedback.innerHTML = `<div class="success">Password updated!</div>`;
+                setTimeout(() => document.getElementById("pass-modal").style.display="none", 900);
+            })
+            .catch(err => feedback.innerHTML = `<div class="error">${err.message}</div>`);
+    });
+</script>
+</body>
+</html>
+
+
